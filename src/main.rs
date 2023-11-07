@@ -1,5 +1,9 @@
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
+use std::{
+    fmt::{Display, Formatter},
+    io,
+    str::FromStr,
+    time::Instant,
+};
 use varisat::{CnfFormula, ExtendFormula, Solver, Var};
 
 type Cell = Option<u8>;
@@ -163,7 +167,7 @@ impl Display for Grid {
         for y in 0..9 {
             for x in 0..9 {
                 match self.get(x, y) {
-                    None => write!(f, " ")?,
+                    None => write!(f, "  ")?,
                     Some(d) => write!(f, "{} ", d + 1)?,
                 }
                 if x < 8 && (x + 1) % 3 == 0 {
@@ -179,7 +183,30 @@ impl Display for Grid {
     }
 }
 
-fn main() {}
+fn main() {
+    println!("Input your sudoku: ");
+    let mut line = String::new();
+    io::stdin().read_line(&mut line).unwrap();
+
+    let grid = Grid::from_str(line.trim_end_matches(&['\r', '\n'])).unwrap();
+    println!("input:\n{grid}");
+
+    let start_solve = Instant::now();
+    let result = grid.solve();
+    let end_solve = Instant::now();
+    match result {
+        Ok(solution) => {
+            println!(
+                "solution ({} ms):\n{solution}",
+                (end_solve - start_solve).as_micros() as f64 / 1_000.0
+            );
+        }
+        Err(_) => println!(
+            "No solution! ({} ms)",
+            (end_solve - start_solve).as_micros() as f64 / 1_000.0
+        ),
+    }
+}
 
 #[cfg(test)]
 mod test {
@@ -191,7 +218,8 @@ mod test {
             // "86   7           4 9 58 2    7   8 663   2  5 1  9  3  7   53  3    6     9    1 "
         // "1    7 9  3  2   8  96  5    53  9   1  8   26    4   3      1  41     7  7   3  "
         // "1                                                                               2"
-        "8          36      7  9 2   5   7       457     1   3   1    68  85   1  9    4  "
+        // "8          36      7  9 2   5   7       457     1   3   1    68  85   1  9    4  "
+        "     6    59     82    8    45        3        6  3 54   325  6                  "
                 .parse()
                 .unwrap();
 
